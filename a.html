@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> </title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:  #1A1A2E;
+      --cream: #F2EDE6;
+      --warm:  #E8E0D5;
+      --gold:  #C9A96E;
+      --mocha: #6B4E3D;
+      --text:  #2C2420;
+      --muted: #8A7A70;
+      --sidebar-w: 180px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'Noto Serif KR', serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .mobile-genre-bar {
+      display: none;
+      overflow-x: auto;
+      background: var(--navy);
+      border-bottom: 2px solid var(--gold);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .mobile-genre-bar::-webkit-scrollbar { display: none; }
+    .mobile-genre-bar-inner {
+      display: flex;
+      padding: 0 0.5rem;
+      gap: 0;
+    }
+    .mobile-tab {
+      flex-shrink: 0;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: #9A9BB5;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .mobile-tab.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+      font-weight: 500;
+    }
+
+    .layout {
+      display: flex;
+      flex: 1;
+    }
+
+    aside {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      padding: 2.4rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      border-right: 3px solid var(--gold);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .genre-tab {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.3rem;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      color: #9A9BB5;
+      font-size: 0.82rem;
+      letter-spacing: 0.03em;
+      user-select: none;
+    }
+    .genre-tab:hover { background: rgba(201,169,110,0.08); color: var(--warm); }
+    .genre-tab.active {
+      border-left-color: var(--gold);
+      background: rgba(201,169,110,0.13);
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .genre-tab .count {
+      font-size: 0.68rem;
+      background: rgba(201,169,110,0.18);
+      color: var(--gold);
+      padding: 0.1rem 0.42rem;
+      border-radius: 99px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .genre-tab.active .count,
+    .genre-tab:hover .count { opacity: 1; }
+
+    main {
+      flex: 1;
+      padding: 2.6rem 2.8rem;
+      min-width: 0;
+    }
+
+    .section-header {
+      margin-bottom: 1.6rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--warm);
+    }
+    .section-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--mocha);
+      margin-bottom: 0.8rem;
+    }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      min-height: 1.6rem;
+    }
+    .filter-label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: 'Noto Sans KR', sans-serif;
+      margin-right: 0.2rem;
+      letter-spacing: 0.04em;
+    }
+    .filter-tag {
+      font-size: 0.68rem;
+      padding: 0.22rem 0.6rem;
+      border-radius: 99px;
+      background: var(--warm);
+      color: var(--mocha);
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      font-family: 'Noto Sans KR', sans-serif;
+      user-select: none;
+    }
+    .filter-tag:hover { border-color: var(--gold); }
+    .filter-tag.active {
+      background: var(--navy);
+      color: var(--gold);
+      border-color: var(--gold);
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 1.4rem;
+    }
+
+    .book-card {
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 10px rgba(26,26,46,0.07);
+      transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+      border-bottom: 3px solid var(--gold);
+      animation: fadeUp 0.25s ease both;
+    }
+    .book-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(26,26,46,0.12);
+    }
+    .book-card.hidden { display: none; }
+
+    .book-info {
+      padding: 1.1rem 1.1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+      flex: 1;
+    }
+    .book-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.08rem;
+      line-height: 1.38;
+      color: var(--navy);
+    }
+    .book-author {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 0.1rem;
+    }
+    .book-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.62;
+    }
+
+    .book-comment {
+      margin-top: 0.65rem;
+      position: relative;
+      background: #FFF8F0;
+      border: 1.5px solid #E5D0B0;
+      border-radius: 10px;
+      border-bottom-left-radius: 3px;
+      padding: 0.55rem 0.75rem 0.55rem 0.85rem;
+    }
+
+    .book-comment::before {
+      content: '';
+      position: absolute;
+      bottom: -9px;
+      left: 14px;
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 8px solid #E5D0B0;
+    }
+    .book-comment::after {
+      content: '';
+      position: absolute;
+      bottom: -6.5px;
+      left: 15px;
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 3px solid transparent;
+      border-top: 7px solid #FFF8F0;
+    }
+    .comment-text {
+      font-size: 0.77rem;
+      color: #5C3D2E;
+      line-height: 1.65;
+      font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      font-weight: 400;
+    }
+
+    .book-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.85rem;
+    }
+    .tag {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 99px;
+      background: var(--warm);
+      color: var(--mocha);
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      font-family: 'Noto Sans KR', sans-serif;
+      transition: background 0.13s, border-color 0.13s, color 0.13s;
+      user-select: none;
+    }
+    .tag:hover { border-color: var(--gold); }
+    .tag.active {
+      background: var(--navy);
+      color: var(--gold);
+      border-color: var(--gold);
+    }
+
+    /* 빈 상태 */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 960px) {
+      :root { --sidebar-w: 150px; }
+      main { padding: 2rem 1.8rem; }
+      .book-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.2rem; }
+    }
+
+    /* 모바일 (≤ 640px) — 사이드바 숨기고 상단 탭바 표시 */
+    @media (max-width: 640px) {
+      aside { display: none; }
+      .mobile-genre-bar { display: block; }
+      main { padding: 1.4rem 1rem; }
+      .book-grid { grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+      .section-header h2 { font-size: 1.3rem; }
+      .book-title { font-size: 0.95rem; }
+      .book-info { padding: 0.85rem 0.9rem 1rem; }
+    }
+
+    @media (max-width: 380px) {
+      .book-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="mobile-genre-bar" id="mobileBar">
+    <div class="mobile-genre-bar-inner" id="mobileBarInner"></div>
+  </nav>
+
+  <div class="layout">
+    <aside id="sidebar"></aside>
+    <main id="main"></main>
+  </div>
+
+<script>
+  // ─────────────────────────────────────────────────────────
+  //  데이터
+  //    title   : 제목 (필수)
+  //    author  : 저자 (필수)
+  //    desc    : 한줄소개 (없으면 null)
+  //    comment : 코멘트 (없으면 null)
+  //    tags    : 태그 배열 (없으면 [])
+  // ─────────────────────────────────────────────────────────
+  const genres = [
+    {
+      id: 'literary', label: '순문학',
+      books: [
+        { title: '채식주의자', author: '한강',
+          desc: '폭력과 꿈, 침묵으로 저항하는 한 여자의 이야기.',
+          comment: '읽고 나서 한동안 멍했다.',
+          tags: ['한국소설', '수상작', '강렬함'] },
+        { title: '노르웨이의 숲', author: '무라카미 하루키',
+          desc: '사라진 사람들 사이에서 살아남은 자의 기억.',
+          comment: null,
+          tags: ['일본소설', '성장', '상실'] },
+        { title: '파친코', author: '이민진',
+          desc: '재일 조선인 가족 4대의 삶을 그린 대하소설.',
+          comment: '묵직하고 아름답다. 오래 기억에 남는 책.',
+          tags: ['역사', '가족', '디아스포라'] },
+      ]
+    },
+    {
+      id: 'fantasy', label: '판타지',
+      books: [
+        { title: '이름의 바람', author: '패트릭 로스퍼스',
+          desc: '전설적인 마법사 코테가 자신의 일생을 직접 이야기한다.',
+          comment: '1권인데 완결이 아직도 안 났다는 게 함정.',
+          tags: ['서양판타지', '성장서사', '마법'] },
+        { title: '나이트서커스', author: '에린 모겐스턴',
+          desc: '밤에만 열리는 검은 천막 서커스, 그 안의 마법 대결.',
+          comment: null,
+          tags: ['분위기 소설', '로맨스', '마법'] },
+      ]
+    },
+    {
+      id: 'scifi', label: 'SF',
+      books: [
+        { title: '솔라리스', author: '스타니스와프 렘',
+          desc: '인간의 언어로는 설명할 수 없는 존재와의 접촉.',
+          comment: '읽는 내내 불편하고 그래서 좋았다.',
+          tags: ['고전SF', '철학적', '외계'] },
+        { title: '1984', author: '조지 오웰',
+          desc: '모든 것이 감시되는 전체주의 사회를 살아가는 한 남자.',
+          comment: null,
+          tags: ['디스토피아', '고전', '정치'] },
+      ]
+    },
+    {
+      id: 'romance', label: '로맨스',
+      books: [
+        { title: '오만과 편견', author: '제인 오스틴',
+          desc: '계층과 편견을 넘는 엘리자베스와 다아시의 사랑.',
+          comment: '시간이 지나도 전혀 안 질린다.',
+          tags: ['고전', '영국소설', '계층'] },
+      ]
+    },
+    {
+      id: 'mystery', label: '추리/스릴러',
+      books: [
+        { title: '그리고 아무도 없었다', author: '애거사 크리스티',
+          desc: '외딴 섬에 모인 열 명, 한 명씩 죽어간다.',
+          comment: '지금 읽어도 충격적인 반전.',
+          tags: ['밀실추리', '고전', '반전'] },
+        { title: '나는 고백한다', author: '자우메 카브레',
+          desc: '세 시대를 관통하는 한 남자의 고백과 죄의 기록.',
+          comment: null,
+          tags: ['스페인소설', '역사', '심리'] },
+      ]
+    },
+    {
+      id: 'other', label: '기타',
+      books: []
+    },
+  ];
+
+  let currentGenre = genres[0].id;
+  let activeTag = null; // 선택된 태그 (null = 전체)
+
+  function getTagsForGenre(genre) {
+    const set = new Set();
+    genre.books.forEach(b => (b.tags || []).forEach(t => set.add(t)));
+    return [...set];
+  }
+
+  function renderSidebar() {
+    document.getElementById('sidebar').innerHTML = genres.map(g => `
+      <div class="genre-tab ${g.id === currentGenre ? 'active' : ''}"
+           onclick="switchGenre('${g.id}')">
+        <span>${g.label}</span>
+        <span class="count">${g.books.length}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('mobileBarInner').innerHTML = genres.map(g => `
+      <div class="mobile-tab ${g.id === currentGenre ? 'active' : ''}"
+           onclick="switchGenre('${g.id}')">
+        ${g.label}
+      </div>
+    `).join('');
+  }
+
+  function renderMain() {
+    const genre = genres.find(g => g.id === currentGenre);
+    const allTags = getTagsForGenre(genre);
+
+    const filterBarHtml = '';
+
+    const visibleBooks = activeTag
+      ? genre.books.filter(b => (b.tags || []).includes(activeTag))
+      : genre.books;
+
+    const cardsHtml = visibleBooks.length
+      ? visibleBooks.map((b, i) => {
+          const commentHtml = b.comment ? `
+            <div class="book-comment">
+              <span class="comment-text">${b.comment}</span>
+            </div>` : '';
+          const tagsHtml = (b.tags && b.tags.length) ? `
+            <div class="book-tags">
+              ${b.tags.map(t => `
+                <span class="tag ${activeTag === t ? 'active' : ''}"
+                      onclick="toggleTag('${t}')">${t}</span>
+              `).join('')}
+            </div>` : '';
+          return `
+            <div class="book-card" style="animation-delay:${i * 0.05}s">
+              <div class="book-info">
+                <div class="book-title">${b.title}</div>
+                <div class="book-author">${b.author}</div>
+                ${b.desc ? `<div class="book-desc">${b.desc}</div>` : ''}
+                ${commentHtml}
+                ${tagsHtml}
+              </div>
+            </div>`;
+        }).join('')
+      : `<div class="empty-state">해당 태그의 책이 없습니다.</div>`;
+
+    document.getElementById('main').innerHTML = `
+      <div class="section-header">
+        <h2>${genre.label}</h2>
+        ${filterBarHtml}
+      </div>
+      <div class="book-grid">${cardsHtml}</div>
+    `;
+  }
+
+  function switchGenre(id) {
+    currentGenre = id;
+    activeTag = null;
+    renderSidebar();
+    renderMain();
+  }
+
+  function toggleTag(tag) {
+    activeTag = (activeTag === tag) ? null : tag;
+    renderMain();
+  }
+
+  renderSidebar();
+  renderMain();
+</script>
+
+</body>
+</html>
